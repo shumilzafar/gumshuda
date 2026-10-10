@@ -35,8 +35,16 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Align Expo versions
+        run: npx expo install --fix
+
       - name: Expo prebuild
         run: npx expo prebuild --platform android --non-interactive
+
+      - name: Dump generated settings
+        run: |
+          echo "=== expo version ==="; npx expo --version
+          echo "=== settings.gradle head ==="; head -40 android/settings.gradle
 
       - name: Build debug APK
         run: |
