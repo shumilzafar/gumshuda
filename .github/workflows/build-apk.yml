@@ -1,9 +1,11 @@
 name: Build APK
 
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 
 jobs:
   build:
@@ -12,16 +14,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
 
       - name: Setup Android SDK
         run: |
@@ -32,28 +37,38 @@ jobs:
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
 
       - name: Align Expo versions
         run: npx expo install --fix
 
+
       - name: Expo prebuild
         run: npx expo prebuild --platform android --non-interactive
+
+
+      - name: Generate debug keystore
+        run: keytool -genkeypair -v -keystore android/app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+
 
       - name: Dump generated settings
         run: |
           echo "=== expo version ==="; npx expo --version
           echo "=== settings.gradle head ==="; head -40 android/settings.gradle
 
-      - name: Build debug APK
+
+      - name: Build release APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
+
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: gumshuda-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
